@@ -188,7 +188,8 @@ def parseKeywords(keywords):
 			if debugging: print("new address is: %s" % (newAddress))
 			if (newAddress != None):
 				address = newAddress
-		keywordList.append(keywordDict)
+		if keywordDict not in keywordList:
+			keywordList.append(keywordDict)
 		i+=1
 		
 	if debugging: print("sending %s to parseLocation" % (address))
@@ -214,10 +215,10 @@ def jsonArticle(article):
 	if ((byline == None)):
 		data['byline'] = "New York Times"
 	else: data['byline'] = byline
-	data['headline'] = parseTitle(article['headline'])
+	data['headline'] = parseTitle(article['headline'])[0:199]
 	data['authors'] = parseAuthors(article['author'])	
 	if (article['lead_paragraph'] != None):
-		data['abstract'] = article['lead_paragraph']
+		data['abstract'] = article['lead_paragraph'][0:499]
 		
 	#DB doesn't accept null abstract
 	else:
@@ -275,39 +276,40 @@ def updateDB(jsonObject):
 		'''
 
 		#old json to fix
-		oldJson = json.loads(jsonObject)
+		updatedJson = json.loads(jsonObject)
 
 		if debugging: print("\npost failed, trying to update existing")
-		g = requests.get("http://cc-nebula.cc.gatech.edu/geonewsapi/articles/?format=json&sourceid=" +  oldJson['sourceid'])
-		if debugging: print ("trying to get from http://cc-nebula.cc.gatech.edu/geonewsapi/articles/?format=json&sourceid=" + oldJson['sourceid'])
-
-		newJson = json.loads(g.content)
+		dbJson = requests.get("http://cc-nebula.cc.gatech.edu/geonewsapi/articles/?format=json&sourceid=" +  updatedJson['sourceid']).json()[0]
+		if debugging: print ("trying to get from http://cc-nebula.cc.gatech.edu/geonewsapi/articles/?format=json&sourceid=" + updatedJson['sourceid'])
 		
-		oldJson['retweetcount'] = newJson[0]['retweetcount']
-		oldJson['retweetcounts'] = newJson[0]['retweetcounts']
-		oldJson['sharecount'] = newJson[0]['sharecount']
-		oldJson['facebookcounts'] = newJson[0]['facebookcounts']
-		oldJson['pk'] = newJson[0]['pk']
-
-		testDict = {}
-		keyList = oldJson.keys()
-		for key in keyList:
-			testValue = oldJson[key]
-			if (type(testValue) == 'unicode'):
-				testValue.encode('utf-8')
-			testDict[key.encode('utf-8')] = testValue
+		if debugging: 
+			print ("This is dbJson\n")
+			print (dbJson)
 		
-		final = json.dumps(testDict)
-		print ("trying to put:")
-		print (final)
-		print ("\n")
+		for key in updatedJson:
+			if debugging:
+				print ("adding %s to dbJson" % (key))
+				print ("dbJson is a %s" % (type(dbJson)))
+				print ("updatedJson is a %s" % (type(updatedJson)))
+			dbJson[key] = updatedJson[key]
 		
-		print ("trying to put to http://cc-nebula.cc.gatech.edu/geonewsapi/articles/" + str(newJson[0]['pk']))
-		x = requests.put("http://cc-nebula.cc.gatech.edu/geonewsapi/articles/" + str(newJson[0]['pk']), data=final, headers={'content-type':'application/json', 'accept':'application/json'})
-		print (x.status_code, x.reason, x.content)
+		final = json.dumps(dbJson)
+		if debugging:
+			print ("trying to put:")
+			print (final)
+			print ("\n")
+		
+		if debugging: print ("trying to put to http://cc-nebula.cc.gatech.edu/geonewsapi/articles/" + str(dbJson['pk']))
+		x = requests.put('http://cc-nebula.cc.gatech.edu/geonewsapi/articles/' + str(dbJson['pk'])+'/' , data = final, headers={'content-type':'application/json', 'accept':'application/json'})
+		if debugging: print (x.status_code, x.reason, x.content)
 		if (200 <= x.status_code <= 299):
 			return 1
 		else:
+			logFile.write(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()) + "\n    ")
+			logFile.write(str(x.status_code) + ", ")
+			logFile.write(x.reason + ", ")
+			logFile.write(x.content + "\n\n    ")
+			logFile.write(str(jsonObject) + "\n\n")
 			return 0
 
 def postToDB(jsonArray):
@@ -336,8 +338,8 @@ def postToDB(jsonArray):
 			else:
 				global duplicates
 				duplicates += 1
-			#if (updateDB(oldJson)):
-				#submitted += 1
+				if (updateDB(jsonObject)):
+					submitted += 1
 
 articles = getArticles(date)
 articleList = parseArticleList(articles)
