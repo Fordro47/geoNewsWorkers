@@ -9,7 +9,7 @@ import logging
 
 logging.basicConfig(filename='facebook_worker_logger',level=logging.DEBUG)
 
-logger = logging.getLogger('facebook_worker_logger')
+logger = logging.getLogger('facebook_logger')
 logger.setLevel(logging.DEBUG)
 
 formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
@@ -45,7 +45,7 @@ def populateFacebookCounts(pk, url, article):
 	query = append + url + appendEnd
 
 	response = requests.get(query).json()[0]
-	logger.debug(formatLoggerMessage(response))
+	# logger.debug(formatLoggerMessage(response))
 
 	shareCount = response['share_count']
 	likeCount = response['like_count']
@@ -57,19 +57,21 @@ def populateFacebookCounts(pk, url, article):
 	# article['likecounts'].append({'likecount': likeCount})
 	# article['commentcounts'].append({'commentcount': commentCount})
 	# article['clickcounts'].append({'clickcount': clickCount})
+	return response
 
 def getUrlsAndPk(articles):
+	global updatedArticleListSize
 
 	for article in articles:
-		populateFacebookCounts(article['pk'], article['url'], article)
+		fb_req = populateFacebookCounts(article['pk'], article['url'], article)
 		r = requests.put('http://cc-nebula.cc.gatech.edu/geonewsapi/articles/' + str(article['pk'])+'/' , data = json.dumps(article), headers={'content-type':'application/json', 'accept':'application/json'})
-		if (r.status_code >= 300 || r.status_code < 200):
-			print("put failed\nr.content\n")
-			logger.error(formatLoggerMessage(r.status_code + ' Error: Put failed at \nr.content\n'))
+		if (r.status_code >= 300 or r.status_code < 200):
+			logger.debug(formatLoggerMessage(fb_req))
+			logger.error(formatLoggerMessage(str(r.status_code) + ' Error: Put failed at: ' + r.content))#' \nr.content\n'))
 		else:
-			updatedArticleListSize++
+			updatedArticleListSize = updatedArticleListSize + 1
 
-	logger.debug(formatLoggerMessage(updatedArticleListSize + ' articles updated'))
+	logger.debug(formatLoggerMessage(str(updatedArticleListSize) + ' articles updated'))
 	logger.info(formatLoggerMessage('Finish updating Database'))
 
 # //Add start run
@@ -82,7 +84,7 @@ date = (datetime.datetime.now()-datetime.timedelta(days=7)).strftime('%Y-%m-%d %
 #articles will be an array of article
 articles = requests.get('http://cc-nebula.cc.gatech.edu/geonewsapi/articles/?format=json&enddate=' + date).json()
 articleListSize = len(articles)
-logger.debug(formatLoggerMessage(articleListSize + ' articles retrieved from Database'))
+logger.debug(formatLoggerMessage(str(articleListSize) + ' articles retrieved from Database'))
 getUrlsAndPk(articles)
 
 
