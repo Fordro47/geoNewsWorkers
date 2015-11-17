@@ -12,24 +12,18 @@ import logging
 
 #cc-nebula.cc.gatech.edu/geonewsapi/articles/?date>=    [datetime.datetime.now()-timedelta(days=7)]
 
-logging.basicConfig(filename='twitter_logger_worker',level=logging.DEBUG)
+logger = logging.getLogger('twitter_worker')
+logger.setLevel(logging.INFO)
 
-logger = logging.getLogger('twitter_logger_worker')
-logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s :: %(message)s')
 
-formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-
-handler = logging.StreamHandler()
-handler.setLevel(logging.DEBUG)
+handler = logging.FileHandler('logs/twitter_worker.log')
+handler.setLevel(logging.INFO)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 articleListSize = 0
 updatedArticleListSize = 0
-
-def formatLoggerMessage(msg):
-	message = str(msg)
-	return str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' - ' + message
 
 def getTweetCount(pk, url):
 
@@ -37,7 +31,7 @@ def getTweetCount(pk, url):
 
 	param = append + url
 	retweetCount = requests.get(param).json()['count'] #urllib2.urlopen(param))['count']
-	logger.debug(formatLoggerMessage(retweetCount))
+	logger.debug(url + ':' + str(retweetCount))
 	#post back to the database with pk, retweet combo
 	#json.load(urllib2.urlopen)
 
@@ -46,7 +40,7 @@ def getTweetCount(pk, url):
 	return retweetCount
 
 def getUrlsAndPk(articles):
-	global updatedArticleListSize
+	global updatedArticleListSize = 0
 
 	for article in articles:
 		#article = articles[104]
@@ -58,12 +52,12 @@ def getUrlsAndPk(articles):
 		if (r.status_code >= 300 or r.status_code < 200):
 			logger.error(formatLoggerMessage(str(r.status_code) + ' Error: Put failed at: ' + r.content))#' \nr.content\n'))
 		else:
-			updatedArticleListSize = updatedArticleListSize + 1
+			updatedArticleListSize += 1
 
-	logger.debug(formatLoggerMessage(str(updatedArticleListSize) + ' articles updated'))
-	logger.info(formatLoggerMessage('Finish updating Database'))
+	logger.info(str(updatedArticleListSize) + ' articles successfully updated')
+	logger.info('Finish updating Database')
 
-logger.info(formatLoggerMessage('Start updating Database'))
+logger.info('Start updating Database')
 
 #get back the date 7 days ago in the format specified
 date = (datetime.datetime.now()-datetime.timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
@@ -71,7 +65,7 @@ date = (datetime.datetime.now()-datetime.timedelta(days=7)).strftime('%Y-%m-%d %
 #articles will be an array of 
 articles = requests.get('http://cc-nebula.cc.gatech.edu/geonewsapi/articles/?format=json&startdate=' + date).json()
 articleListSize = len(articles)
-logger.debug(formatLoggerMessage(str(articleListSize) + ' articles retrieved from Database'))
+logger.info(str(articleListSize) + ' articles retrieved from Database')
 getUrlsAndPk(articles)
 
 
