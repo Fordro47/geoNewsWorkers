@@ -19,7 +19,7 @@ submitted = 0
 coordCount = 0
 logFile = open('nyt_log.txt', 'a')
 
-logFile.write(time.utc() + " nyt_worker called for: " + date)
+logFile.write( time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()) + "\n    nyt_worker called with: " + date + "\n\n")
 
 #initializes end date by taking date and adding 1 day (86400 seconds)
 endDateStruct = time.strptime(date, '%Y%m%d')
@@ -326,7 +326,12 @@ def postToDB(jsonArray):
 			submitted += 1
 			
 		if (r.status_code == 400):
-			logFile.write(r.status_code, r.reason, r.content)
+			if not ("sourceid" in r.content):
+				logFile.write(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()) + "\n    ")
+				logFile.write(str(r.status_code) + ", ")
+				logFile.write(r.reason + ", ")
+				logFile.write(r.content + "\n\n    ")
+				logFile.write(str(jsonObject) + "\n\n")
 			#if (updateDB(oldJson)):
 				#submitted += 1
 
@@ -339,13 +344,16 @@ if debugging:
 		print("\n")
 		
 #posts all of the articles to the DB. Uncomment when ready.		
-#postToDB(jsonArray)
+postToDB(jsonArray)
 
-logFile.write("articles pulled: 1000\n")
-logFile.write("articles to submit: %d\n" % (len(jsonArray)))
-logFile.write("articles successfully submitted: %d\n" %  (submitted))
-logFile.write("geolocation coordinates returned: %d\n" % (coordCount))
-logFile.write(time.time() + " END")
+logFile.write(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
+logFile.write("\n    finished; statistics below\n")
+logFile.write("    articles pulled: 1000\n")
+logFile.write("    articles to submit: %d\n" % (len(jsonArray)))
+logFile.write("    articles successfully submitted: %d\n" %  (submitted))
+logFile.write("    geolocation coordinates returned: %d\n" % (coordCount) + 80*"#" + "\n\n")
+logFile.close()
+
 
 ################################################################
 
