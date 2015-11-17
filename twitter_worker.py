@@ -47,7 +47,7 @@ def getUrlsAndPk(articles):
 		# print json.dumps(article)
 		r = requests.put('http://localhost/geonewsapi/articles/' + str(article['pk'])+'/' , data = json.dumps(article), headers={'content-type':'application/json', 'accept':'application/json'})
 		if (r.status_code >= 300 or r.status_code < 200):
-			logger.error(formatLoggerMessage(str(r.status_code) + ' Error: Put failed at: ' + r.content))#' \nr.content\n'))
+			logger.error('Error on Put\n-----------\n--Request--\n-----------\n' + 'http://localhost/geonewsapi/articles/\n' + str(article['pk'])+'/' + json.dumps(article) + '\n------------\n--Response--\n-----------\n' + str(r.status_code) + r.content)#' \nr.content\n'))
 		else:
 			updatedArticleListSize += 1
 
@@ -58,14 +58,10 @@ logger.info('Start updating Database')
 
 #get back the date 7 days ago in the format specified
 date = (datetime.datetime.now()-datetime.timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
-
 #articles will be an array of 
-articles = requests.get('http://localhost/geonewsapi/articles/?format=json&startdate=' + date).json()
+articles = requests.get('http://localhost/geonewsapi/articles/?format=json&start_date=' + date).json()
 logger.info(str(len(articles)) + ' articles retrieved from Database')
 getUrlsAndPk(articles)
-
-
-
 
 '''
 get all the articles from the database
