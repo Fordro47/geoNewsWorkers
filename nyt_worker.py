@@ -16,6 +16,7 @@ if (len(sys.argv) == 3 and str(sys.argv[2]).lower() == "-d"):
 api = articleAPI("af0ead0b339871714bd8718ac007283b:11:73169680")
 
 submitted = 0
+duplicates = 0
 coordCount = 0
 logFile = open('nyt_log.txt', 'a')
 
@@ -332,6 +333,9 @@ def postToDB(jsonArray):
 				logFile.write(r.reason + ", ")
 				logFile.write(r.content + "\n\n    ")
 				logFile.write(str(jsonObject) + "\n\n")
+			else:
+				global duplicates
+				duplicates += 1
 			#if (updateDB(oldJson)):
 				#submitted += 1
 
@@ -351,6 +355,7 @@ logFile.write("\n    finished; statistics below\n")
 logFile.write("    articles pulled: 1000\n")
 logFile.write("    articles to submit: %d\n" % (len(jsonArray)))
 logFile.write("    articles successfully submitted: %d\n" %  (submitted))
+logFile.write("    duplicate articles found: %d\n" % (duplicates))
 logFile.write("    geolocation coordinates returned: %d\n" % (coordCount) + 80*"#" + "\n\n")
 logFile.close()
 
