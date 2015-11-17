@@ -48,7 +48,7 @@ def getUrlsAndPk(articles):
 		article['retweetcount'] = count
 		article['retweetcounts'].append({'retweetcount': count})
 		# print json.dumps(article)
-		r = requests.put('http://cc-nebula.cc.gatech.edu/geonewsapi/articles/' + str(article['pk'])+'/' , data = json.dumps(article), headers={'content-type':'application/json', 'accept':'application/json'})
+		r = requests.put('http://localhost/geonewsapi/articles/' + str(article['pk'])+'/' , data = json.dumps(article), headers={'content-type':'application/json', 'accept':'application/json'})
 		if (r.status_code >= 300 or r.status_code < 200):
 			logger.error(formatLoggerMessage(str(r.status_code) + ' Error: Put failed at: ' + r.content))#' \nr.content\n'))
 		else:
@@ -63,7 +63,7 @@ logger.info('Start updating Database')
 date = (datetime.datetime.now()-datetime.timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
 
 #articles will be an array of 
-articles = requests.get('http://cc-nebula.cc.gatech.edu/geonewsapi/articles/?format=json&startdate=' + date).json()
+articles = requests.get('http://localhost/geonewsapi/articles/?format=json&startdate=' + date).json()
 articleListSize = len(articles)
 logger.info(str(articleListSize) + ' articles retrieved from Database')
 getUrlsAndPk(articles)
