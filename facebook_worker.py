@@ -7,9 +7,9 @@ import datetime
 import json
 import logging
 
-logging.basicConfig(filename='')
+logging.basicConfig(filename='facebook_worker_logger',level=logging.DEBUG)
 
-logger = logging.getLogger('facebook_logger')
+logger = logging.getLogger('facebook_worker_logger')
 logger.setLevel(logging.DEBUG)
 
 formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
