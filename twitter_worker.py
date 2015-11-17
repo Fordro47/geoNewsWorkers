@@ -22,9 +22,6 @@ handler.setLevel(logging.INFO)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-articleListSize = 0
-updatedArticleListSize = 0
-
 def getTweetCount(pk, url):
 
 	append = "http://urls.api.twitter.com/1/urls/count.json?url="
@@ -40,7 +37,7 @@ def getTweetCount(pk, url):
 	return retweetCount
 
 def getUrlsAndPk(articles):
-	global updatedArticleListSize = 0
+	updatedArticleListSize = 0
 
 	for article in articles:
 		#article = articles[104]
@@ -64,8 +61,7 @@ date = (datetime.datetime.now()-datetime.timedelta(days=7)).strftime('%Y-%m-%d %
 
 #articles will be an array of 
 articles = requests.get('http://localhost/geonewsapi/articles/?format=json&startdate=' + date).json()
-articleListSize = len(articles)
-logger.info(str(articleListSize) + ' articles retrieved from Database')
+logger.info(str(len(articles)) + ' articles retrieved from Database')
 getUrlsAndPk(articles)
 
 
