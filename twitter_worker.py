@@ -46,6 +46,7 @@ def getTweetCount(pk, url):
 	return retweetCount
 
 def getUrlsAndPk(articles):
+	global updatedArticleListSize
 
 	for article in articles:
 		#article = articles[104]
@@ -54,13 +55,12 @@ def getUrlsAndPk(articles):
 		article['retweetcounts'].append({'retweetcount': count})
 		# print json.dumps(article)
 		r = requests.put('http://cc-nebula.cc.gatech.edu/geonewsapi/articles/' + str(article['pk'])+'/' , data = json.dumps(article), headers={'content-type':'application/json', 'accept':'application/json'})
-		if (r.status_code >= 300 || r.status_code < 200):
-			print("put failed\nr.content\n")
-			logger.error(formatLoggerMessage(r.status_code + ' Error: Put failed at \nr.content\n'))
+		if (r.status_code >= 300 or r.status_code < 200):
+			logger.error(formatLoggerMessage(str(r.status_code) + ' Error: Put failed at: ' + r.content))#' \nr.content\n'))
 		else:
-			updatedArticleListSize++
+			updatedArticleListSize = updatedArticleListSize + 1
 
-	logger.debug(formatLoggerMessage(updatedArticleListSize + ' articles updated'))
+	logger.debug(formatLoggerMessage(str(updatedArticleListSize) + ' articles updated'))
 	logger.info(formatLoggerMessage('Finish updating Database'))
 
 logger.info(formatLoggerMessage('Start updating Database'))
@@ -71,7 +71,7 @@ date = (datetime.datetime.now()-datetime.timedelta(days=7)).strftime('%Y-%m-%d %
 #articles will be an array of 
 articles = requests.get('http://cc-nebula.cc.gatech.edu/geonewsapi/articles/?format=json&startdate=' + date).json()
 articleListSize = len(articles)
-logger.debug(formatLoggerMessage(articleListSize + ' articles retrieved from Database'))
+logger.debug(formatLoggerMessage(str(articleListSize) + ' articles retrieved from Database'))
 getUrlsAndPk(articles)
 
 
