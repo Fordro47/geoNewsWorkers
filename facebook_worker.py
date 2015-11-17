@@ -5,8 +5,26 @@
 import requests
 import datetime
 import json
-# import logging
+import logging
 
+logging.basicConfig(filename='')
+
+logger = logging.getLogger('facebook_logger')
+logger.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+
+handler = logging.StreamHandler()
+handler.setLevel(logging.DEBUG)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+# logging.basicConfig(filename='facebook_worker_log.log', format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
+# logging.debug('Facebook Worker Logging File')
+# logging.info('This file will keep track of the workers status')
+
+articleListSize = 0
+updatedArticleListSize = 0
 
 #cc-nebula.cc.gatech.edu/geonewsapi/articles/?date>=    [datetime.datetime.now()-timedelta(days=7)]
 
@@ -14,6 +32,10 @@ import json
 # This function takes in a primary key and a URL from an article, 
 # calls facebook's data on that data and then adds all the information
 # for that article in the database fields. 
+def formatLoggerMessage(msg):
+	message = str(msg)
+	return str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' - ' + message
+
 def populateFacebookCounts(pk, url, article):
 
 	# Get Query in correct Format for pulling data
@@ -23,6 +45,7 @@ def populateFacebookCounts(pk, url, article):
 	query = append + url + appendEnd
 
 	response = requests.get(query).json()[0]
+	logger.debug(formatLoggerMessage(response))
 
 	shareCount = response['share_count']
 	likeCount = response['like_count']
@@ -40,16 +63,26 @@ def getUrlsAndPk(articles):
 	for article in articles:
 		populateFacebookCounts(article['pk'], article['url'], article)
 		r = requests.put('http://cc-nebula.cc.gatech.edu/geonewsapi/articles/' + str(article['pk'])+'/' , data = json.dumps(article), headers={'content-type':'application/json', 'accept':'application/json'})
-		if (r.status_code == 400):
+		if (r.status_code >= 300 || r.status_code < 200):
 			print("put failed\nr.content\n")
+			logger.error(formatLoggerMessage(r.status_code + ' Error: Put failed at \nr.content\n'))
+		else:
+			updatedArticleListSize++
+
+	logger.debug(formatLoggerMessage(updatedArticleListSize + ' articles updated'))
+	logger.info(formatLoggerMessage('Finish updating Database'))
 
 # //Add start run
+
+logger.info(formatLoggerMessage('Start updating Database'))
+
 #get back the date 7 days ago in the format specified
 date = (datetime.datetime.now()-datetime.timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
 
 #articles will be an array of article
 articles = requests.get('http://cc-nebula.cc.gatech.edu/geonewsapi/articles/?format=json&enddate=' + date).json()
-
+articleListSize = len(articles)
+logger.debug(formatLoggerMessage(articleListSize + ' articles retrieved from Database'))
 getUrlsAndPk(articles)
 
 
