@@ -6,6 +6,7 @@ import requests
 import datetime
 import json
 import logging
+import sys
 
 logger = logging.getLogger('facebook_worker')
 logger.setLevel(logging.INFO)
