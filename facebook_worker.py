@@ -65,7 +65,7 @@ def getUrlsAndPk(articles):
 	for article in articles:
 		try:
 			facebookCounts = getFacebookCounts(article['pk'], article['url'])
-			if (facebookCounts is None)
+			if (facebookCounts is None):
 				logger.error('Problem retrieving facebookcounts for article ' + article['url'] + ', skipping article with id ' + article['pk'])
 				continue
 			article['facebookcounts'].append({'sharecount': facebookCounts['share_count'], 'likecount' : facebookCounts['like_count'], 'commentcount' : facebookCounts['comment_count'], 'clickcount': facebookCounts['click_count']})
@@ -77,7 +77,7 @@ def getUrlsAndPk(articles):
 				else:
 					updatedArticleListSize +=1
 			except Exception, e:
-				logger.error('Problem getting a response from the backend for url: http://localhost/geonewsapi/articles/' + str(article['pk'])
+				logger.error('Problem getting a response from the backend for url: http://localhost/geonewsapi/articles/' + str(article['pk']))
 		except Exception, e:
 			traceback.print_exc()
 

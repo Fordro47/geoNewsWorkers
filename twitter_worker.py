@@ -54,7 +54,7 @@ def getUrlsAndPk(articles):
 	for article in articles:
 		try:
 			retweetCount = getTweetCount(article['pk'], article['url'])
-			if (retweetCount is None)
+			if (retweetCount is None):
 				logger.error('Problem retrieving retweetcount for article ' + article['url'] + ', skipping article with id ' + article['pk'])
 				continue
 			article['retweetcount'] = retweetCount
@@ -66,7 +66,7 @@ def getUrlsAndPk(articles):
 				else:
 					updatedArticleListSize += 1
 			except Exception, e:
-				logger.error('Problem getting a response from the backend for url: http://localhost/geonewsapi/articles/' + str(article['pk'])
+				logger.error('Problem getting a response from the backend for url: http://localhost/geonewsapi/articles/' + str(article['pk']))
 		except Exception, e:
 			traceback.print_exc()
 
