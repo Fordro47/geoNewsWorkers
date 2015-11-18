@@ -60,8 +60,8 @@ def getUrlsAndPk(articles):
 				logger.error('Error on Put\n-----------\n--Request--\n-----------\n' + 'http://localhost/geonewsapi/articles/\n' + str(article['pk'])+'/' + json.dumps(article) + '\n------------\n--Response--\n-----------\n' + str(r.status_code) + r.content)
 			else:
 				updatedArticleListSize +=1
-		except:
-			print(sys.exc_info()[0])
+		except Exception as e:
+			print(e)
 
 	logger.info(str(updatedArticleListSize) + ' articles successfully updated')
 	logger.info('Finish updating Database')
