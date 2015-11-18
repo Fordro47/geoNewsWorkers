@@ -26,31 +26,48 @@ logger.addHandler(handler)
 def getTweetCount(pk, url):
 	append = "http://urls.api.twitter.com/1/urls/count.json?url="
 	param = append + url
-	retweetCount = requests.get(param).json()['count'] #urllib2.urlopen(param))['count']
-	logger.debug(url + ':' + str(retweetCount))
-	#post back to the database with pk, retweet combo
-	#json.load(urllib2.urlopen)
-
-	#POST to retweetcounts in the database
-	# print(retweetCount)
-	return retweetCount
+	try:
+		response = requests.get(param)
+		try:
+			responseJSON = response.json()
+			try:
+				retweetCount = responseJSON['count'] #urllib2.urlopen(param))['count']
+				logger.debug(url + ':' + str(retweetCount))
+				return retweetCount
+			except Exception, e:
+				logger.error('Problem getting count from twitter response json\nurl: ' + param + '\nresponse status code: ' + response.status_code + '\nresponse content: ' + response.content)
+				logger.exception(e)
+				return None
+		except Exception, e:
+			logger.error('Problem getting json from twitter response\nurl: ' + param + '\nresponse status code: ' + response.status_code + '\nresponse content: ' + response.content)
+			logger.exception(e)
+			return None
+	except Exception, e:
+		logger.error('Problem getting response from twitter\nurl: ' + param + '\nresponse status code: ' + response.status_code + '\nresponse content: ' + response.content)
+		logger.exception(e)
+		return None
+	return None
 
 def getUrlsAndPk(articles):
 	updatedArticleListSize = 0
 
 	for article in articles:
 		try:
-			#article = articles[104]
-			count = getTweetCount(article['pk'], article['url'])
-			article['retweetcount'] = count
-			article['retweetcounts'].append({'retweetcount': count})
-			# print json.dumps(article)
-			r = requests.put('http://localhost/geonewsapi/articles/' + str(article['pk'])+'/' , data = json.dumps(article), headers={'content-type':'application/json', 'accept':'application/json'})
-			if (r.status_code >= 300 or r.status_code < 200):
-				logger.error('Error on Put\n-----------\n--Request--\n-----------\n' + 'http://localhost/geonewsapi/articles/\n' + str(article['pk'])+'/' + json.dumps(article) + '\n------------\n--Response--\n-----------\n' + str(r.status_code) + r.content)#' \nr.content\n'))
-			else:
-				updatedArticleListSize += 1
-		except Exception as e:
+			retweetCount = getTweetCount(article['pk'], article['url'])
+			if (retweetCount is None)
+				logger.error('Problem retrieving retweetcount for article ' + article['url'] + ', skipping article with id ' + article['pk'])
+				continue
+			article['retweetcount'] = retweetCount
+			article['retweetcounts'].append({'retweetcount': retweetCount})
+			try:
+				r = requests.put('http://localhost/geonewsapi/articles/' + str(article['pk'])+'/' , data = json.dumps(article), headers={'content-type':'application/json', 'accept':'application/json'})
+				if (r.status_code >= 300 or r.status_code < 200):
+					logger.error('Error on Put\n-----------\n--Request--\n-----------\n' + 'http://localhost/geonewsapi/articles/' + str(article['pk'])+'/\n' + json.dumps(article) + '\n------------\n--Response--\n-----------\n' + str(r.status_code) + r.content)#' \nr.content\n'))
+				else:
+					updatedArticleListSize += 1
+			except Exception, e:
+				logger.error('Problem getting a response from the backend for url: http://localhost/geonewsapi/articles/' + str(article['pk'])
+		except Exception, e:
 			traceback.print_exc()
 
 	logger.info(str(updatedArticleListSize) + ' articles successfully updated')

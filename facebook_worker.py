@@ -24,7 +24,7 @@ logger.addHandler(handler)
 # This function takes in a primary key and a URL from an article, 
 # calls facebook's data on that data and then adds all the information
 # for that article in the database fields.
-def populateFacebookCounts(pk, url, article):
+def getFacebookCounts(pk, url):
 
 	# Get Query in correct Format for pulling data
 
@@ -32,34 +32,52 @@ def populateFacebookCounts(pk, url, article):
 	appendEnd = "%27&format=json"
 	query = append + url + appendEnd
 
-	response = requests.get(query).json()[0]
-	# logger.debug(formatLoggerMessage(response))
-
-	shareCount = response['share_count']
-	likeCount = response['like_count']
-	commentCount = response['comment_count']
-	clickCount = response['click_count']
-
-	logger.debug(url + ': share-' + str(shareCount) + 'like-' + str(likeCount) + 'comment-' + str(commentCount) + 'click-' + str(clickCount))
-
-	article['facebookcounts'].append({'sharecount': shareCount, 'likecount' : likeCount, 'commentcount' : commentCount, 'clickcount': clickCount})
-	article['sharecount'] = shareCount
-	# article['likecounts'].append({'likecount': likeCount})
-	# article['commentcounts'].append({'commentcount': commentCount})
-	# article['clickcounts'].append({'clickcount': clickCount})
-	return response
+	try:
+		response = request.get(query)
+		try:
+			responseJSON = response.json()
+			try:
+				facebookCounts = {}
+				responseCounts = responseJSON[0]
+				facebookCounts['share_count'] = responseCounts['share_count']
+				facebookCounts['like_count'] = responseCounts['like_count']
+				facebookCounts['comment_count'] = responseCounts['comment_count']
+				facebookCounts['click_count'] = responseCounts['click_count']
+				logger.debug(url + ': share-' + str(facebookCounts['share_count']) + 'like-' + str(facebookCounts['like_count']) + 'comment-' + str(facebookCounts['comment_count']) + 'click-' + str(facebookCounts['click_count']))
+				return facebookCounts
+			except Exception, e:
+				logger.error('Problem getting counts from facebook response json\nurl: ' + param + '\nresponse status code: ' + response.status_code + '\nresponse content: ' + response.content)
+				logger.exception(e)
+				return None
+		except Exception, e:
+			logger.error('Problem getting json from twitter response\nurl: ' + param + '\nresponse status code: ' + response.status_code + '\nresponse content: ' + response.content)
+			logger.exception(e)
+			return None
+	except Exception, e:
+		logger.error('Problem getting response from twitter\nurl: ' + param + '\nresponse status code: ' + response.status_code + '\nresponse content: ' + response.content)
+		logger.exception(e)
+		return None
+	return None
 
 def getUrlsAndPk(articles):
 	updatedArticleListSize = 0
 
 	for article in articles:
 		try:
-			fb_req = populateFacebookCounts(article['pk'], article['url'], article)
-			r = requests.put('http://cc-nebula.cc.gatech.edu/geonewsapi/articles/' + str(article['pk'])+'/' , data = json.dumps(article), headers={'content-type':'application/json', 'accept':'application/json'})
-			if (r.status_code >= 300 or r.status_code < 200):
-				logger.error('Error on Put\n-----------\n--Request--\n-----------\n' + 'http://localhost/geonewsapi/articles/\n' + str(article['pk'])+'/' + json.dumps(article) + '\n------------\n--Response--\n-----------\n' + str(r.status_code) + r.content)
-			else:
-				updatedArticleListSize +=1
+			facebookCounts = getFacebookCounts(article['pk'], article['url'])
+			if (facebookCounts is None)
+				logger.error('Problem retrieving facebookcounts for article ' + article['url'] + ', skipping article with id ' + article['pk'])
+				continue
+			article['facebookcounts'].append({'sharecount': facebookCounts['share_count'], 'likecount' : facebookCounts['like_count'], 'commentcount' : facebookCounts['comment_count'], 'clickcount': facebookCounts['click_count']})
+			article['sharecount'] = facebookCounts['share_count']
+			try:
+				r = requests.put('http://localhost/geonewsapi/articles/' + str(article['pk'])+'/' , data = json.dumps(article), headers={'content-type':'application/json', 'accept':'application/json'})
+				if (r.status_code >= 300 or r.status_code < 200):
+					logger.error('Error on Put\n-----------\n--Request--\n-----------\n' + 'http://localhost/geonewsapi/articles/' + str(article['pk'])+'/\n' + json.dumps(article) + '\n------------\n--Response--\n-----------\n' + str(r.status_code) + r.content)
+				else:
+					updatedArticleListSize +=1
+			except Exception, e:
+				logger.error('Problem getting a response from the backend for url: http://localhost/geonewsapi/articles/' + str(article['pk'])
 		except Exception, e:
 			traceback.print_exc()
 
@@ -74,7 +92,7 @@ logger.info('Start updating Database')
 date = (datetime.datetime.now()-datetime.timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
 
 #articles will be an array of article
-articles = requests.get('http://cc-nebula.cc.gatech.edu/geonewsapi/articles/?format=json&start_date=' + date).json()
+articles = requests.get('http://localhost/geonewsapi/articles/?format=json&start_date=' + date).json()
 logger.info(str(len(articles)) + ' articles retrieved from Database')
 getUrlsAndPk(articles)
 
