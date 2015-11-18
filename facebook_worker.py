@@ -27,7 +27,7 @@ def populateFacebookCounts(pk, url, article):
 
 	# Get Query in correct Format for pulling data
 
-	append = "https://api.facebook.com/method/fql.query?query=select%20total_count,like_count,comment_count,share_count,click_count%20from%20link_stat%20where%20url=%27"
+	append = "http://api.facebook.com/method/fql.query?query=select%20total_count,like_count,comment_count,share_count,click_count%20from%20link_stat%20where%20url=%27"
 	appendEnd = "%27&format=json"
 	query = append + url + appendEnd
 
