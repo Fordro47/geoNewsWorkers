@@ -7,35 +7,22 @@ import datetime
 import json
 import logging
 
-logging.basicConfig(filename='facebook_worker_logger',level=logging.DEBUG)
+logger = logging.getLogger('facebook_worker')
+logger.setLevel(logging.INFO)
 
-logger = logging.getLogger('facebook_logger')
-logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s :: %(message)s')
 
-formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-
-handler = logging.StreamHandler()
-handler.setLevel(logging.DEBUG)
+handler = logging.FileHandler('logs/facebook_worker.log')
+handler.setLevel(logging.INFO)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
-
-# logging.basicConfig(filename='facebook_worker_log.log', format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
-# logging.debug('Facebook Worker Logging File')
-# logging.info('This file will keep track of the workers status')
-
-articleListSize = 0
-updatedArticleListSize = 0
 
 #cc-nebula.cc.gatech.edu/geonewsapi/articles/?date>=    [datetime.datetime.now()-timedelta(days=7)]
 
 
 # This function takes in a primary key and a URL from an article, 
 # calls facebook's data on that data and then adds all the information
-# for that article in the database fields. 
-def formatLoggerMessage(msg):
-	message = str(msg)
-	return str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')) + ' - ' + message
-
+# for that article in the database fields.
 def populateFacebookCounts(pk, url, article):
 
 	# Get Query in correct Format for pulling data
@@ -52,6 +39,8 @@ def populateFacebookCounts(pk, url, article):
 	commentCount = response['comment_count']
 	clickCount = response['click_count']
 
+	logger.debug(url + ': share-' + str(shareCount) + 'like-' + str(likeCount) + 'comment-' + str(commentCount) + 'click-' + str(clickCount))
+
 	article['facebookcounts'].append({'sharecount': shareCount, 'likecount' : likeCount, 'commentcount' : commentCount, 'clickcount': clickCount})
 	article['sharecount'] = shareCount
 	# article['likecounts'].append({'likecount': likeCount})
@@ -60,31 +49,29 @@ def populateFacebookCounts(pk, url, article):
 	return response
 
 def getUrlsAndPk(articles):
-	global updatedArticleListSize
+	updatedArticleListSize = 0
 
 	for article in articles:
 		fb_req = populateFacebookCounts(article['pk'], article['url'], article)
 		r = requests.put('http://cc-nebula.cc.gatech.edu/geonewsapi/articles/' + str(article['pk'])+'/' , data = json.dumps(article), headers={'content-type':'application/json', 'accept':'application/json'})
 		if (r.status_code >= 300 or r.status_code < 200):
-			logger.debug(formatLoggerMessage(fb_req))
-			logger.error(formatLoggerMessage(str(r.status_code) + ' Error: Put failed at: ' + r.content))#' \nr.content\n'))
+			logger.error('Error on Put\n-----------\n--Request--\n-----------\n' + 'http://localhost/geonewsapi/articles/\n' + str(article['pk'])+'/' + json.dumps(article) + '\n------------\n--Response--\n-----------\n' + str(r.status_code) + r.content)
 		else:
-			updatedArticleListSize = updatedArticleListSize + 1
+			updatedArticleListSize +=1
 
-	logger.debug(formatLoggerMessage(str(updatedArticleListSize) + ' articles updated'))
-	logger.info(formatLoggerMessage('Finish updating Database'))
+	logger.info(str(updatedArticleListSize) + ' articles successfully updated')
+	logger.info('Finish updating Database')
 
 # //Add start run
 
-logger.info(formatLoggerMessage('Start updating Database'))
+logger.info('Start updating Database')
 
 #get back the date 7 days ago in the format specified
 date = (datetime.datetime.now()-datetime.timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
 
 #articles will be an array of article
-articles = requests.get('http://cc-nebula.cc.gatech.edu/geonewsapi/articles/?format=json&enddate=' + date).json()
-articleListSize = len(articles)
-logger.debug(formatLoggerMessage(str(articleListSize) + ' articles retrieved from Database'))
+articles = requests.get('http://cc-nebula.cc.gatech.edu/geonewsapi/articles/?format=json&start_date=' + date).json()
+logger.info(str(len(articles)) + ' articles retrieved from Database')
 getUrlsAndPk(articles)
 
 
