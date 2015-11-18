@@ -25,25 +25,25 @@ logger.addHandler(handler)
 
 def getTweetCount(pk, url):
 	append = "http://urls.api.twitter.com/1/urls/count.json?url="
-	param = append + url
+	query = append + url
 	try:
-		response = requests.get(param)
+		response = requests.get(query)
 		try:
 			responseJSON = response.json()
 			try:
-				retweetCount = responseJSON['count'] #urllib2.urlopen(param))['count']
+				retweetCount = responseJSON['count'] #urllib2.urlopen(query))['count']
 				logger.debug(url + ':' + str(retweetCount))
 				return retweetCount
 			except Exception, e:
-				logger.error('Problem getting count from twitter response json\nurl: ' + param + '\nresponse status code: ' + response.status_code + '\nresponse content: ' + response.content)
+				logger.error('Problem getting count from twitter response json\nurl: ' + query + '\nresponse status code: ' + response.status_code + '\nresponse content: ' + response.content)
 				logger.exception(e)
 				return None
 		except Exception, e:
-			logger.error('Problem getting json from twitter response\nurl: ' + param + '\nresponse status code: ' + response.status_code + '\nresponse content: ' + response.content)
+			logger.error('Problem getting json from twitter response\nurl: ' + query + '\nresponse status code: ' + response.status_code + '\nresponse content: ' + response.content)
 			logger.exception(e)
 			return None
 	except Exception, e:
-		logger.error('Problem getting response from twitter\nurl: ' + param + '\nresponse status code: ' + response.status_code + '\nresponse content: ' + response.content)
+		logger.error('Problem getting response from twitter\nurl: ' + query)
 		logger.exception(e)
 		return None
 	return None

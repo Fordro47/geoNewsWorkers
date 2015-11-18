@@ -54,7 +54,7 @@ def getFacebookCounts(pk, url):
 			logger.exception(e)
 			return None
 	except Exception, e:
-		logger.error('Problem getting response from facebook\nurl: ' + query + '\nresponse status code: ' + response.status_code + '\nresponse content: ' + response.content)
+		logger.error('Problem getting response from facebook\nurl: ' + query)
 		logger.exception(e)
 		return None
 	return None
