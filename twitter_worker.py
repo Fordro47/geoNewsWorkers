@@ -35,11 +35,11 @@ def getTweetCount(pk, url):
 				logger.debug(url + ':' + str(retweetCount))
 				return retweetCount
 			except Exception, e:
-				logger.error('Problem getting count from twitter response json\nurl: ' + query + '\nresponse status code: ' + response.status_code + '\nresponse content: ' + response.content)
+				logger.error('Problem getting count from twitter response json\nurl: ' + query + '\nresponse status code: ' + str(response.status_code) + '\nresponse content: ' + response.content)
 				logger.exception(e)
 				return None
 		except Exception, e:
-			logger.error('Problem getting json from twitter response\nurl: ' + query + '\nresponse status code: ' + response.status_code + '\nresponse content: ' + response.content)
+			logger.error('Problem getting json from twitter response\nurl: ' + query + '\nresponse status code: ' + str(response.status_code) + '\nresponse content: ' + response.content)
 			logger.exception(e)
 			return None
 	except Exception, e:

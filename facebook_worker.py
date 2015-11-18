@@ -46,11 +46,11 @@ def getFacebookCounts(pk, url):
 				logger.debug(url + ': share-' + str(facebookCounts['share_count']) + 'like-' + str(facebookCounts['like_count']) + 'comment-' + str(facebookCounts['comment_count']) + 'click-' + str(facebookCounts['click_count']))
 				return facebookCounts
 			except Exception, e:
-				logger.error('Problem getting counts from facebook response json\nurl: ' + query + '\nresponse status code: ' + response.status_code + '\nresponse content: ' + response.content)
+				logger.error('Problem getting counts from facebook response json\nurl: ' + query + '\nresponse status code: ' + str(response.status_code) + '\nresponse content: ' + response.content)
 				logger.exception(e)
 				return None
 		except Exception, e:
-			logger.error('Problem getting json from facebook response\nurl: ' + query + '\nresponse status code: ' + response.status_code + '\nresponse content: ' + response.content)
+			logger.error('Problem getting json from facebook response\nurl: ' + query + '\nresponse status code: ' + str(response.status_code) + '\nresponse content: ' + response.content)
 			logger.exception(e)
 			return None
 	except Exception, e:
