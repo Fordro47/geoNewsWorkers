@@ -8,7 +8,7 @@ import requests
 import datetime
 import json
 import logging
-import sys
+import traceback
 
 
 #cc-nebula.cc.gatech.edu/geonewsapi/articles/?date>=    [datetime.datetime.now()-timedelta(days=7)]
@@ -51,7 +51,7 @@ def getUrlsAndPk(articles):
 			else:
 				updatedArticleListSize += 1
 		except Exception as e:
-			print(e)
+			traceback.print_exc()
 
 	logger.info(str(updatedArticleListSize) + ' articles successfully updated')
 	logger.info('Finish updating Database')
