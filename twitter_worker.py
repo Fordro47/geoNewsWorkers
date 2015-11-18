@@ -55,7 +55,7 @@ def getUrlsAndPk(articles):
 		try:
 			retweetCount = getTweetCount(article['pk'], article['url'])
 			if (retweetCount is None):
-				logger.error('Problem retrieving retweetcount for article ' + article['url'] + ', skipping article with id ' + article['pk'])
+				logger.error('Problem retrieving retweetcount for article ' + article['url'] + ', skipping article with id ' + str(article['pk']))
 				continue
 			article['retweetcount'] = retweetCount
 			article['retweetcounts'].append({'retweetcount': retweetCount})

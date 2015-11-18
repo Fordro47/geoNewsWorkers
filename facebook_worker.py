@@ -33,7 +33,7 @@ def getFacebookCounts(pk, url):
 	query = append + url + appendEnd
 
 	try:
-		response = request.get(query)
+		response = requests.get(query)
 		try:
 			responseJSON = response.json()
 			try:
@@ -66,7 +66,7 @@ def getUrlsAndPk(articles):
 		try:
 			facebookCounts = getFacebookCounts(article['pk'], article['url'])
 			if (facebookCounts is None):
-				logger.error('Problem retrieving facebookcounts for article ' + article['url'] + ', skipping article with id ' + article['pk'])
+				logger.error('Problem retrieving facebookcounts for article ' + article['url'] + ', skipping article with id ' + str(article['pk']))
 				continue
 			article['facebookcounts'].append({'sharecount': facebookCounts['share_count'], 'likecount' : facebookCounts['like_count'], 'commentcount' : facebookCounts['comment_count'], 'clickcount': facebookCounts['click_count']})
 			article['sharecount'] = facebookCounts['share_count']
