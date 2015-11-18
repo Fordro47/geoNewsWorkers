@@ -8,6 +8,7 @@ import requests
 import datetime
 import json
 import logging
+import sys
 
 
 #cc-nebula.cc.gatech.edu/geonewsapi/articles/?date>=    [datetime.datetime.now()-timedelta(days=7)]
@@ -23,9 +24,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 def getTweetCount(pk, url):
-
 	append = "http://urls.api.twitter.com/1/urls/count.json?url="
-
 	param = append + url
 	retweetCount = requests.get(param).json()['count'] #urllib2.urlopen(param))['count']
 	logger.debug(url + ':' + str(retweetCount))
@@ -40,16 +39,19 @@ def getUrlsAndPk(articles):
 	updatedArticleListSize = 0
 
 	for article in articles:
-		#article = articles[104]
-		count = getTweetCount(article['pk'], article['url'])
-		article['retweetcount'] = count
-		article['retweetcounts'].append({'retweetcount': count})
-		# print json.dumps(article)
-		r = requests.put('http://localhost/geonewsapi/articles/' + str(article['pk'])+'/' , data = json.dumps(article), headers={'content-type':'application/json', 'accept':'application/json'})
-		if (r.status_code >= 300 or r.status_code < 200):
-			logger.error('Error on Put\n-----------\n--Request--\n-----------\n' + 'http://localhost/geonewsapi/articles/\n' + str(article['pk'])+'/' + json.dumps(article) + '\n------------\n--Response--\n-----------\n' + str(r.status_code) + r.content)#' \nr.content\n'))
-		else:
-			updatedArticleListSize += 1
+		try:
+			#article = articles[104]
+			count = getTweetCount(article['pk'], article['url'])
+			article['retweetcount'] = count
+			article['retweetcounts'].append({'retweetcount': count})
+			# print json.dumps(article)
+			r = requests.put('http://localhost/geonewsapi/articles/' + str(article['pk'])+'/' , data = json.dumps(article), headers={'content-type':'application/json', 'accept':'application/json'})
+			if (r.status_code >= 300 or r.status_code < 200):
+				logger.error('Error on Put\n-----------\n--Request--\n-----------\n' + 'http://localhost/geonewsapi/articles/\n' + str(article['pk'])+'/' + json.dumps(article) + '\n------------\n--Response--\n-----------\n' + str(r.status_code) + r.content)#' \nr.content\n'))
+			else:
+				updatedArticleListSize += 1
+		except:
+			print(sys.exc_info()[0])
 
 	logger.info(str(updatedArticleListSize) + ' articles successfully updated')
 	logger.info('Finish updating Database')

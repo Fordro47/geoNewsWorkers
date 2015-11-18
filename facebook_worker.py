@@ -52,12 +52,15 @@ def getUrlsAndPk(articles):
 	updatedArticleListSize = 0
 
 	for article in articles:
-		fb_req = populateFacebookCounts(article['pk'], article['url'], article)
-		r = requests.put('http://cc-nebula.cc.gatech.edu/geonewsapi/articles/' + str(article['pk'])+'/' , data = json.dumps(article), headers={'content-type':'application/json', 'accept':'application/json'})
-		if (r.status_code >= 300 or r.status_code < 200):
-			logger.error('Error on Put\n-----------\n--Request--\n-----------\n' + 'http://localhost/geonewsapi/articles/\n' + str(article['pk'])+'/' + json.dumps(article) + '\n------------\n--Response--\n-----------\n' + str(r.status_code) + r.content)
-		else:
-			updatedArticleListSize +=1
+		try:
+			fb_req = populateFacebookCounts(article['pk'], article['url'], article)
+			r = requests.put('http://cc-nebula.cc.gatech.edu/geonewsapi/articles/' + str(article['pk'])+'/' , data = json.dumps(article), headers={'content-type':'application/json', 'accept':'application/json'})
+			if (r.status_code >= 300 or r.status_code < 200):
+				logger.error('Error on Put\n-----------\n--Request--\n-----------\n' + 'http://localhost/geonewsapi/articles/\n' + str(article['pk'])+'/' + json.dumps(article) + '\n------------\n--Response--\n-----------\n' + str(r.status_code) + r.content)
+			else:
+				updatedArticleListSize +=1
+		except:
+			print(sys.exc_info()[0])
 
 	logger.info(str(updatedArticleListSize) + ' articles successfully updated')
 	logger.info('Finish updating Database')
