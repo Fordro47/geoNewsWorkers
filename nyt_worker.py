@@ -365,8 +365,8 @@ def postToDB(jsonArray):
 				logFile.write(timestamp + "\n    ")
 				logFile.write(str(r.status_code) + ", ")
 				logFile.write(r.reason + ", ")
-				if (x.status_code != 500):
-					logFile.write(x.content + "\n\n    ")
+				if (r.status_code != 500):
+					logFile.write(r.content + "\n\n    ")
 				else:
 					logFile.write("Relevant html file: " + (timestamp + ".html\n"))
 					serverErrorFile = open("logs/html/nyt_" + timestamp + ".html", "w")
