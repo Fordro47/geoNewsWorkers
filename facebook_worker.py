@@ -6,6 +6,7 @@ import requests
 import datetime
 import json
 import logging
+import time
 import traceback
 
 logger = logging.getLogger('facebook_worker')
@@ -31,32 +32,36 @@ def getFacebookCounts(pk, url):
 	append = "http://api.facebook.com/method/fql.query?query=select%20total_count,like_count,comment_count,share_count,click_count%20from%20link_stat%20where%20url=%27"
 	appendEnd = "%27&format=json"
 	query = append + url + appendEnd
-
-	try:
-		response = requests.get(query)
+	while(1):
 		try:
-			responseJSON = response.json()
+			response = requests.get(query)
 			try:
-				facebookCounts = {}
-				responseCounts = responseJSON[0]
-				facebookCounts['share_count'] = responseCounts['share_count']
-				facebookCounts['like_count'] = responseCounts['like_count']
-				facebookCounts['comment_count'] = responseCounts['comment_count']
-				facebookCounts['click_count'] = responseCounts['click_count']
-				logger.debug(url + ': share-' + str(facebookCounts['share_count']) + 'like-' + str(facebookCounts['like_count']) + 'comment-' + str(facebookCounts['comment_count']) + 'click-' + str(facebookCounts['click_count']))
-				return facebookCounts
+				responseJSON = response.json()
+				try:
+					facebookCounts = {}
+					responseCounts = responseJSON[0]
+					facebookCounts['share_count'] = responseCounts['share_count']
+					facebookCounts['like_count'] = responseCounts['like_count']
+					facebookCounts['comment_count'] = responseCounts['comment_count']
+					facebookCounts['click_count'] = responseCounts['click_count']
+					logger.debug(url + ': share-' + str(facebookCounts['share_count']) + 'like-' + str(facebookCounts['like_count']) + 'comment-' + str(facebookCounts['comment_count']) + 'click-' + str(facebookCounts['click_count']))
+					return facebookCounts
+				except Exception, e:
+					if responseJSON['error_code'] == 4:
+						print 'sleeping'
+						time.sleep(3600)
+						continue
+					logger.error('Problem getting counts from facebook response json\nurl: ' + query + '\nresponse status code: ' + str(response.status_code) + '\nresponse content: ' + response.content)
+					logger.exception(e)
+					return None
 			except Exception, e:
-				logger.error('Problem getting counts from facebook response json\nurl: ' + query + '\nresponse status code: ' + str(response.status_code) + '\nresponse content: ' + response.content)
+				logger.error('Problem getting json from facebook response\nurl: ' + query + '\nresponse status code: ' + str(response.status_code) + '\nresponse content: ' + response.content)
 				logger.exception(e)
 				return None
 		except Exception, e:
-			logger.error('Problem getting json from facebook response\nurl: ' + query + '\nresponse status code: ' + str(response.status_code) + '\nresponse content: ' + response.content)
+			logger.error('Problem getting response from facebook\nurl: ' + query)
 			logger.exception(e)
 			return None
-	except Exception, e:
-		logger.error('Problem getting response from facebook\nurl: ' + query)
-		logger.exception(e)
-		return None
 	return None
 
 def getUrlsAndPk(articles):
