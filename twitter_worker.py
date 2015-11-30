@@ -14,7 +14,7 @@ import traceback
 #cc-nebula.cc.gatech.edu/geonewsapi/articles/?date>=    [datetime.datetime.now()-timedelta(days=7)]
 
 logger = logging.getLogger('twitter_worker')
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 formatter = logging.Formatter('%(asctime)s :: %(message)s')
 
@@ -78,7 +78,7 @@ logger.info('Start updating Database')
 #get back the date 7 days ago in the format specified
 date = (datetime.datetime.now()-datetime.timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
 #articles will be an array of 
-articles = requests.get('http://localhost/geonewsapi/articles/?format=json&start_date=' + date).json()
+articles = requests.get('http://localhost/geonewsapi/articles/?format=json&ordering=-retweetcount&start_date=' + date).json()
 logger.info(str(len(articles)) + ' articles retrieved from Database')
 getUrlsAndPk(articles)
 
