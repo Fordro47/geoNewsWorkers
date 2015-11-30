@@ -19,7 +19,7 @@ logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s :: %(message)s')
 
 handler = logging.FileHandler('logs/twitter_worker.log')
-handler.setLevel(logging.INFO)
+handler.setLevel(logging.DEBUG)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
