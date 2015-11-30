@@ -24,7 +24,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 def getTweetCount(pk, url):
-	append = "http://urls.api.twitter.com/1/urls/count.json?url="
+	append = "http://opensharecount.com/count.json?url="
 	query = append + url
 	try:
 		response = requests.get(query)
