@@ -26,7 +26,7 @@ def getArticles():
 	query = 'http://cc-nebula.cc.gatech.edu/geonewsapi/articles/?limit=1000&format=json&ordering=-date'
 	offset = 1000
 	articles = []
-	while(query != None):
+	while(query != None and offset < 1000):
 		try:
 			response = requests.get(query)
 			response.encoding = 'utf-8'
@@ -79,8 +79,8 @@ def updateDB(articles):
 			updateCount += 1
 		else:
 			timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-			log.error('Error on Put\n-----------\n--Request--\n-----------\n' + 'http://localhost/geonewsapi/articles/' + str(article['pk'])+'/\n' + json.dumps(article) + '\n Relevant html file: logs/' + timestamp + ' - ' + article['pk'] + '.html')
-			with open('logs/' + timestamp + ' - ' + article['pk'] + '.html') as errorFile:
+			log.error('Error on Put\n-----------\n--Request--\n-----------\n' + 'http://localhost/geonewsapi/articles/' + str(article['pk'])+'/\n' + json.dumps(article) + '\n Relevant html file: logs/' + timestamp + ' - ' + str(article['pk']) + '.html')
+			with open('logs/' + timestamp + ' - ' + str(article['pk']) + '.html') as errorFile:
 				errorFile.write(r.content)
 
 articles = getArticles()
