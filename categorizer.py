@@ -3,6 +3,7 @@ import requests
 import datetime	
 import logging
 import traceback
+import time
 
 log = logging.getLogger('catogorizer')
 log.setLevel(logging.DEBUG)
@@ -13,10 +14,10 @@ fileHandler = logging.FileHandler('logs/categorizer.log')
 fileHandler.setLevel(logging.DEBUG)
 fileHandler.setFormatter(formatter)
 log.addHandler(fileHandler)
-streamHandler = logging.StreamHandler()
-streamHandler.setLevel(logging.INFO)
-streamHandler.setFormatter(formatter)
-log.addHandler(streamHandler)
+# streamHandler = logging.StreamHandler()
+# streamHandler.setLevel(logging.INFO)
+# streamHandler.setFormatter(formatter)
+# log.addHandler(streamHandler)
 
 with open('categories.json') as categoriesData:
 	categories = json.load(categoriesData)
@@ -25,7 +26,7 @@ def getArticles():
 	query = 'http://cc-nebula.cc.gatech.edu/geonewsapi/articles/?limit=1000&format=json&ordering=-date'
 	offset = 1000
 	articles = []
-	while(query != None and offset < 2000):
+	while(query != None):
 		try:
 			response = requests.get(query)
 			response.encoding = 'utf-8'
@@ -85,7 +86,7 @@ def updateDB(articles):
 articles = getArticles()
 if(articles != None):
 	log.info("articles pulled: %d\n" % len(articles))
-	
+
 	updatedArticles = updateArticles(articles)
 	log.info("articles to update: %d\n" % (len(updatedArticles)))
 
