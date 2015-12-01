@@ -2,7 +2,7 @@ import json
 import requests
 import datetime	
 
-articles = requests.get('http://localhost/geonewsapi/articles/?format=json).json()
+articles = requests.get('http://localhost/geonewsapi/articles/?format=json').json()
 logFile = open("logs/nyt_locator.txt", "a")
 
 def geoLocate(article):
