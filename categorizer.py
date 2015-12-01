@@ -23,10 +23,10 @@ with open('categories.json') as categoriesData:
 	categories = json.load(categoriesData)
 
 def getArticles():
-	query = 'http://cc-nebula.cc.gatech.edu/geonewsapi/articles/?limit=1000&format=json&ordering=-date'
+	query = 'http://localhost/geonewsapi/articles/?limit=1000&format=json&ordering=-date'
 	offset = 1000
 	articles = []
-	while(query != None and offset < 1000):
+	while(query != None and offset < 2000):
 		try:
 			response = requests.get(query)
 			response.encoding = 'utf-8'
