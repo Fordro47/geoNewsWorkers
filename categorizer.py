@@ -26,7 +26,7 @@ def getArticles():
 	query = 'http://localhost/geonewsapi/articles/?limit=1000&format=json&ordering=-date'
 	offset = 1000
 	articles = []
-	while(query != None and offset < 2000):
+	while(query != None):
 		try:
 			response = requests.get(query)
 			response.encoding = 'utf-8'
