@@ -51,7 +51,7 @@ def updateDB(articles):
 			logFile.write(str(jsonObject) + "\n\n")
 
 updatedArticles = updateArticles(articles)
-updateCount = updateDB(updated=Articles)
+updateCount = updateDB(updatedArticles)
 
 logFile.write("articles pulled: %d\n" % (len(articles)))
 logFile.write("articles to update: %d\n" % (len(updatedArticles)))
