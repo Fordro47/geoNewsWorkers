@@ -80,7 +80,7 @@ def updateDB(articles):
 		else:
 			timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
 			log.error('Error on Put\n-----------\n--Request--\n-----------\n' + 'http://localhost/geonewsapi/articles/' + str(article['pk'])+'/\n' + json.dumps(article) + '\n Relevant html file: logs/' + timestamp + ' - ' + str(article['pk']) + '.html')
-			with open('logs/' + timestamp + ' - ' + str(article['pk']) + '.html') as errorFile:
+			with open('logs/' + timestamp + ' - ' + str(article['pk']) + '.html', 'w') as errorFile:
 				errorFile.write(r.content)
 
 articles = getArticles()
