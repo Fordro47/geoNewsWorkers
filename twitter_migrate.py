@@ -16,6 +16,8 @@ import json
 
 def getTweetCount(pk, url):
 
+	""" gets retweet counts using twitter endpoint """
+	
 	append = "http://urls.api.twitter.com/1/urls/count.json?url="
 
 	param = append + url
@@ -29,6 +31,8 @@ def getTweetCount(pk, url):
 	return retweetCount
 
 def getUrlsAndPk(articles):
+
+	""" gets urls and primary keys of articles """
 
 	for article in articles:
 		#article = articles[104]

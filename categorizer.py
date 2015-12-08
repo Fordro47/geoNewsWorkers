@@ -23,6 +23,7 @@ with open('categories.json') as categoriesData:
 	categories = json.load(categoriesData)
 
 def getArticles():
+	""" gets articles from database """
 	query = 'http://localhost/geonewsapi/articles/?limit=1000&format=json&ordering=-date'
 	offset = 1000
 	articles = []
@@ -52,6 +53,7 @@ def getArticles():
 	return articles
 
 def categorize(article):
+	""" categorizes an article based on keyword """
 	for category,keywords in categories.iteritems():
 		for keyword in keywords:
 			if(keyword in article['keywords']):

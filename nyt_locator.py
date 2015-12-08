@@ -2,6 +2,11 @@ import json
 import requests
 import datetime	
 
+"""
+when completed will add additional location
+functionality by cross-references keywords
+"""
+
 articles = requests.get('http://localhost/geonewsapi/articles/?format=json').json()
 logFile = open("logs/nyt_locator.txt", "a")
 

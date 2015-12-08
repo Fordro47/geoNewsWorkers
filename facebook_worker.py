@@ -65,6 +65,9 @@ def getFacebookCounts(pk, url):
 	return None
 
 def getUrlsAndPk(articles):
+
+	# Gets Urls and Primary Keys for articles
+	
 	updatedArticleListSize = 0
 
 	for article in articles:

@@ -24,6 +24,9 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 def getTweetCount(pk, url):
+	
+	""" gets retweet count of article given its pk and url """
+	
 	append = "http://opensharecount.com/count.json?url="
 	query = append + url
 	try:
@@ -49,6 +52,9 @@ def getTweetCount(pk, url):
 	return None
 
 def getUrlsAndPk(articles):
+
+	""" get urls and primary keys of articles """
+	
 	updatedArticleListSize = 0
 
 	for article in articles:
