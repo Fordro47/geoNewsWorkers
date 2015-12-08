@@ -263,9 +263,9 @@ def jsonArticle(article):
 	data['sourceid'] = 'NYT_' + article['id']
 	category = article['news_desk']
 	if (category != None):
-		data['category'] = category
+		data['sectionname'] = category
 	else:
-		data['category'] = 'miscellaneous'
+		data['sectionname'] = 'miscellaneous'
 	
 	#defaults until resolved ########	
 	data['retweetcount'] = 0
