@@ -1,6 +1,5 @@
 import json
 import requests
-import datetime	
 import logging
 import traceback
 import time
@@ -63,7 +62,7 @@ def categorize(article):
 def updateArticles(articles):
 	""" Attempts to categorize the articles """
 	updatedArticles = []
-	
+
 	for article in articles:
 		category = categorize(article)
 		article["category"] = category
@@ -74,7 +73,7 @@ def updateArticles(articles):
 def updateDB(articles):
 	""" Posts updated articles to db """
 	updateCount = 0
-	
+
 	for article in articles:
 		r = requests.put('http://localhost/geonewsapi/articles/' + str(article['pk'])+'/' , data = json.dumps(article), headers={'content-type':'application/json', 'accept':'application/json'})
 		if (200 <= r.status_code <= 299):

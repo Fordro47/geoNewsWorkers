@@ -2,26 +2,45 @@ import sys
 import json
 import requests
 import time
+import logging
+import traceback
+import pprint
 from nytimesarticle import articleAPI
 from pygeocoder import Geocoder
 
 #System arguments #######################################################
 date = sys.argv[1]
 debugging = False
-if (len(sys.argv) == 3 and str(sys.argv[2]).lower() == "-d"):
-    debugging = True
-    print("debugging enabled")
-	
-#Variables #############################################################	
+
+#Variables #############################################################
 api = articleAPI("af0ead0b339871714bd8718ac007283b:11:73169680")
 
 submitted = 0
 duplicates = 0
 coordCount = 0
 multimediaCount = 0
-logFile = open('logs/nyt_log.txt', 'a')
+log = logging.getLogger('nyt_worker')
+log.setLevel(logging.DEBUG)
 
-logFile.write( time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()) + "\n    nyt_worker called with: " + date + "\n\n")
+formatter = logging.Formatter('%(asctime)s :: %(message)s')
+
+fileHandler = logging.FileHandler('logs/nyt_log.log')
+fileHandler.setLevel(logging.INFO)
+fileHandler.setFormatter(formatter)
+log.addHandler(fileHandler)
+
+if (len(sys.argv) == 3 and str(sys.argv[2]).lower() == "-d"):
+    debugging = true
+    streamHandler = logging.StreamHandler()
+    streamHandler.setLevel(logging.DEBUG)
+    streamHandler.setFormatter(formatter)
+    log.addHandler(streamHandler)
+    log.debug("debugging enabled")
+
+log.info("nyt_worker called with: " + date);
+
+with open('categories.json') as categoriesData:
+	categories = json.load(categoriesData)
 
 #initializes end date by taking date and adding 1 day (86400 seconds)
 endDateStruct = time.strptime(date, '%Y%m%d')
@@ -37,11 +56,11 @@ def getArticles(date):
 	"""
 	articleList = []
 
-	#NYT by default only returns 1 of 100 pages containing the first 10 results 
+	#NYT by default only returns 1 of 100 pages containing the first 10 results
 	for i in range(100):
 		articleList.append(api.search(begin_date = date, end_date = endDate, sort = "newest", fl = ["byline", "headline", "keywords", "web_url", "pub_date", "lead_paragraph", "news_desk", "_id", "source", "multimedia"], facet_field = ["section_name"], page = i + 1))
 		time.sleep(.1)
-	return (articleList)	
+	return (articleList)
 
 def parseArticles(articles):
     """
@@ -63,44 +82,43 @@ def parseArticles(articles):
         dic['id'] = i['_id']
         dic['source'] = i['source']
         dic['multimedia'] = i['multimedia']
-		
-        if debugging: print("adding news from: %s\n") % (i['web_url']) 
-		
+
+        log.debug("adding news from: " + i['web_url'])
+
         news.append(dic)
-		
-    if debugging: print("articles in page: %d\n\n") % (len(news))
-	
+
+    log.debug("articles in page: " + len(news))
     return(news)
 
 def parseArticleList(articleList):
 	"""
 	This function takes in a list of responses from the NYT api
 	and returns a list of dictionaries
-	"""	
+	"""
 	news = []
 	i = 0
 	while i < len(articleList):
-	
-		if debugging: print(80*"#" + "\n" + "adding articles from page: %d") % (i + 1)
-		
+
+		log.debug("adding articles from page: " + str(i + 1))
+
 		news.extend(parseArticles(articleList[i]))
 		i += 1
 	return(news)
 
 def parseByline(author):
 	"""
-	Takes author key from dictionary and 
+	Takes author key from dictionary and
 	returns what comes after "BY:"
 	"""
 	if (author != None and 'original' in author and len(author['original']) > 0):
 		original = author['original']
-		return original[3:] 
+		return original[3:]
 	else:
 		return None
 
 def parseAuthors(author):
 	"""
-	Takes author key and 
+	Takes author key and
 	returns a list of dictionaries of first and last names
 	"""
 	authorList = []
@@ -124,7 +142,7 @@ def parseAuthors(author):
 
 def parseTitle(headline):
 	"""
-	Takes title key from dictionary and 
+	Takes title key from dictionary and
 	returns the title
 	"""
 	if 'main' in headline:
@@ -136,12 +154,12 @@ def parseTitle(headline):
 
 def parseLeadParagraph(lead_paragraph):
 	"""
-	Takes lead_paragraph key from dictionary and 
+	Takes lead_paragraph key from dictionary and
 	returns the lead_paragraph
 	"""
-	if (lead_paragraph != None): 
+	if (lead_paragraph != None):
 		return (lead_paragraph)
-	else: 
+	else:
 		return ""
 
 def parseLocation(address):
@@ -150,9 +168,8 @@ def parseLocation(address):
 	and returns a set of coordinates
 	"""
 	coords = {}
-	coords['type'] = "Point"	
-	if debugging: 
-		print("parseLocation() received: " + str(address))
+	coords['type'] = "Point"
+	log.debug("parseLocation() received: " + address)
 	if (address != None):
 		latitude = 0
 		longitude = 0
@@ -165,19 +182,18 @@ def parseLocation(address):
 		coords['coordinates'] = [latitude,longitude]
 		global coordCount
 		coordCount += 1
-		if debugging: print("coordinates: [%d, %d]" % (latitude, longitude))
+		log.debug("coordinates: [" + str(latitude) + ", " + str(longitude) + "%d]")
 	else:
 		coords['coordinates'] = [0,0]
-		if debugging: print("coordinates: [0, 0]")
+		log.debug("coordinates: [0, 0]")
 	return coords
-		
+
 def parseKeywords(keywords):
 	"""
 	Take in a list of keywords and parse out keyword values and coordinates
 	"""
 	keywordList = []
-	if debugging: print("parseKeywords called with:")
-	if debugging: print(keywords)
+	log.debug("parseKeywords called with:" + pprint.pformat(keywords));
 
 	i = 0
 	address = None
@@ -187,26 +203,21 @@ def parseKeywords(keywords):
 		keywordDict['keyword'] = keywords[i]['value'][0:78]
 		if ('name' in keywords[i] and keywords[i]['name'] == "glocations"):
 			newAddress = keywords[i]['value']
-			if debugging: print("new address is: %s" % (newAddress))
+			log.debug("new address is: " + newAddress)
 			if (newAddress != None):
 				address = newAddress
 		if keywordDict not in keywordList:
 			keywordList.append(keywordDict)
 		i+=1
-		
-	if debugging: print("sending %s to parseLocation" % (address))
-	
+
+	log.debug("sending " + newAddress + " to parseLocation")
+
 	coords = parseLocation(address)
-	
-	if debugging:
-		print("parsed keywords: ")
-		print(keywordList)
-		print("coordinates: ")
-		print(coords)
-		print("\n")
-		
+
+	log.debug("parsed keywords: " + pprint.pformat(keywordList) + "coordinates: " + pprint.pformat(coords))
+
 	return [keywordList, coords]
-	
+
 def parseMultimedia(multimedia):
 	"""
 	Take multimedia and return image urls that are NOT thumbnails"
@@ -223,11 +234,18 @@ def parseMultimedia(multimedia):
 					global multimediaCount
 					multimediaCount += 1
 			else:
-				if debugging: print "\nscrapping: ", media
+				log.debug("scrapping: " + pprint.pformat(media))
 		else:
-			if debugging: print "\nscrapping: ", media
+			log.debug("scrapping: " + pprint.pformat(media))
 	return multimediaList
-	
+
+def parseCategory(article):
+	for category,keywords in categories.iteritems():
+		for keyword in keywords:
+			if(keyword in article['keywords']):
+				return category
+	return 'world'
+
 def jsonArticle(article):
 	"""
 	Take an article and parses it into a JSON object
@@ -239,17 +257,17 @@ def jsonArticle(article):
 		data['byline'] = "New York Times"
 	else: data['byline'] = byline
 	data['headline'] = parseTitle(article['headline'])[0:199]
-	data['authors'] = parseAuthors(article['author'])	
+	data['authors'] = parseAuthors(article['author'])
 	if (article['lead_paragraph'] != None):
 		data['abstract'] = article['lead_paragraph'][0:499]
-		
+
 	#DB doesn't accept null abstract
 	else:
 		data['abstract'] = ""
-		
+
 	#coordinates are derived from parsed keywords
 	parsedKeywords = parseKeywords(article['keywords'])
-	
+
 	if (len(parsedKeywords[0]) > 0 and parsedKeywords[0][0]['keyword'] != ""):
 		data['keywords'] = parsedKeywords[0]
 	else:
@@ -261,40 +279,36 @@ def jsonArticle(article):
 	data['url'] = article['url']
 	data['date'] = article['date']
 	data['sourceid'] = 'NYT_' + article['id']
-	category = article['news_desk']
-	if (category != None):
-		data['sectionname'] = category
-	else:
-		data['sectionname'] = 'miscellaneous'
-	
-	#defaults until resolved ########	
+	data['sectionname'] = 'miscellaneous' if article['news_desk'] == None else article['news_desk']
+    data['category'] = parseCategory(data) if len(data['keywords']) > 0 else 'world'
+
+	#defaults until resolved ########
 	data['retweetcount'] = 0
 	data['retweetcounts'] = []
-	
+
 	data['sharecount'] = 0
 	data['facebookcounts'] = []
 	#######################
-	
+
 	json_object = json.dumps(data)
 	return (json_object)
 
 def convertToJSONArray(news):
 	"""
 	Take a list of articles as dictionaries, and convert them
-	to an array of JSON 
+	to an array of JSON
 	objects for posting to database
 	"""
 	jsonArray = []
 	for article in news:
-		if debugging: print("trying to json:")
-		if debugging: print(article)
+		log.debug("trying to json:" + pprint.pformat(article))
 		jsonObject = jsonArticle(article)
 		if jsonObject != None:
 			jsonArray.append(jsonObject)
 	return(jsonArray)
-	
+
 def updateDB(jsonObject):
-		""" 
+		"""
 		Takes in a json string and attempts to retrieve corresponding article from database
 		once retrieved, all fields are updated except for twitter and facebook counts'
 		"""
@@ -302,77 +316,56 @@ def updateDB(jsonObject):
 		#old json to fix
 		updatedJson = json.loads(jsonObject)
 
-		if debugging: print("\npost failed, trying to update existing")
+		log.debug("post failed, trying to update existing")
 		dbJson = requests.get("http://localhost/geonewsapi/articles/?format=json&sourceid=" +  updatedJson['sourceid']).json()[0]
-		if debugging: print ("trying to get from http://localhost/geonewsapi/articles/?format=json&sourceid=" + updatedJson['sourceid'])
-		
-		if debugging: 
-			print ("This is dbJson\n")
-			print (dbJson)
-		
+		log.debug("trying to get from http://localhost/geonewsapi/articles/?format=json&sourceid=" + updatedJson['sourceid'])
+
+		log.debug("This is dbJson\n")
+		log.debug(bJson)
+
 		for key in updatedJson:
-			if debugging:
-				print ("adding %s to dbJson" % (key))
-				print ("dbJson is a %s" % (type(dbJson)))
-				print ("updatedJson is a %s" % (type(updatedJson)))
+			log.debug("adding " + str(key) + " to dbJson")
+			log.debug("dbJson is a " + str(type(dbJson)))
+			log.debug("updatedJson is a " + str(type(updatedJson)))
 			dbJson[key] = updatedJson[key]
-		
+
 		final = json.dumps(dbJson)
-		if debugging:
-			print ("trying to put:")
-			print (final)
-			print ("\n")
-		
-		if debugging: print ("trying to put to http://localhost/geonewsapi/articles/" + str(dbJson['pk']))
+		log.debug("trying to put: " + final)
+
+		log.debug("trying to put to http://localhost/geonewsapi/articles/" + str(dbJson['pk']))
 		x = requests.put('http://localhost/geonewsapi/articles/' + str(dbJson['pk'])+'/' , data = final, headers={'content-type':'application/json', 'accept':'application/json'})
-		if debugging: print (x.status_code, x.reason, x.content)
+		log.debug("Status Code:" + str(x.status_code) + " Reason: " + x.reason)
 		if (200 <= x.status_code <= 299):
 			return 1
 		else:
+			log.error("Attempted to submit: " + final)
 			timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-			logFile.write(timestamp + "\n ")
-			logFile.write(str(x.status_code) + ", ")
-			logFile.write(x.reason + ", ")
-			if (x.status_code != 500):
-				logFile.write(x.content + "\n\n    ")
-			else:
-				logFile.write("Relevant html file: " + (str(dbJson['pk']) + ".html\n"))
-				serverErrorFile = open("logs/html/nyt_" + str(dbJson['pk']) + ".html", "w")
-				serverErrorFile.write(x.content)
-				serverErrorFile.close()
-			logFile.write(str(jsonObject) + "\n\n")
+			log.error("Status Code:" + str(x.status_code) + " Reason: " + x.reason + " Relevant html file: " + (str(dbJson['pk']) + "_" + timestamp + ".html"))
+            serverErrorFile = open("logs/html/nyt_" + str(dbJson['pk']) + "_" + timestamp + ".html", "w")
+            serverErrorFile.write(x.content)
+			serverErrorFile.close()
 			return 0
 
 def postToDB(jsonArray):
 	""" take in an array of json strings and attempt to post to database """
 	for jsonObject in jsonArray:
-		if debugging: 
-			print("trying to post:")
-			print(jsonObject)
-			print("\n")
+		log.debug("trying to post:" + jsonObject)
 		r = requests.post("http://localhost/geonewsapi/articles/", data=jsonObject, headers={'content-type':'application/json', 'accept':'application/json'} )
-		
-		if debugging: print(r.status_code, r.reason, r.content)
-		if debugging: print("\n")
-		
+
+		log.debug("Status Code:" + str(x.status_code) + " Reason: " + x.reason)
+
 		if (200 <= r.status_code <= 299):
 			global submitted
 			submitted += 1
-			
+
 		if (r.status_code == 400):
 			if not ("sourceid" in r.content):
-				timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-				logFile.write(timestamp + "\n    ")
-				logFile.write(str(r.status_code) + ", ")
-				logFile.write(r.reason + ", ")
-				if (r.status_code != 500):
-					logFile.write(r.content + "\n\n    ")
-				else:
-					logFile.write("Relevant html file: " + (timestamp + ".html\n"))
-					serverErrorFile = open("logs/html/nyt_" + timestamp + ".html", "w")
-					serverErrorFile.write(r.content)
-					serverErrorFile.close()
-				logFile.write(str(jsonObject) + "\n\n")
+                log.error("Attempted to submit: " + jsonObject)
+    			timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+    			log.error("Status Code:" + str(x.status_code) + " Reason: " + x.reason + " Relevant html file: " + (str(dbJson['pk']) + "_" + timestamp + ".html"))
+    			serverErrorFile = open("logs/html/nyt_" + str(dbJson['pk']) + "_" + timestamp + ".html", "w")
+    			serverErrorFile.write(x.content)
+    			serverErrorFile.close()
 			else:
 				global duplicates
 				duplicates += 1
@@ -384,23 +377,20 @@ articleList = parseArticleList(articles)
 jsonArray = convertToJSONArray(articleList)
 if debugging:
 	for article in (jsonArray):
-		print(article)
-		print("\n")
-		
-if debugging: print "multimedia returned: ", multimediaCount
-		
-#posts all of the articles to the DB. Uncomment when ready.		
+		log.debug(article)
+
+log.debug("multimedia returned: " + str(multimediaCount))
+
+#posts all of the articles to the DB. Uncomment when ready.
 postToDB(jsonArray)
 
-logFile.write(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()))
-logFile.write("\n    finished; statistics below\n")
-logFile.write("    articles pulled: 1000\n")
-logFile.write("    articles to submit: %d\n" % (len(jsonArray)))
-logFile.write("    articles successfully submitted: %d\n" %  (submitted))
-logFile.write("    duplicate articles found: %d\n" % (duplicates))
-logFile.write("    geolocation coordinates returned: %d\n" % (coordCount) + 80*"#" + "\n\n")
-logFile.close()
-
+stats = "finished, stats:\n\t\t\tarticles pulled: " + str(len(articleList))
+stats += "\n\t\t\tarticles to submit: " + str(len(jsonArray))
+stats += "\n\t\t\tarticles successfully submitted: " + str(submitted)
+stats += "\n\t\t\tduplicate articles found: " + str(duplicates)
+stats += "\n\t\t\tgeolocation coordinates returned: " + str(coordCount)
+stats += 80*"#"
+log.info(stats)
 
 ################################################################
 
@@ -420,4 +410,4 @@ logFile.close()
 #	print("trying to post:\n")
 #	print(jsonArray[0])
 #	r = requests.post("http://localhost/geonewsapi/articles/", data=jsonArray[0], headers={'content-type':'application/json', 'accept':'application/json'} )
-#	print(r.status_code, r.reason) 
+#	print(r.status_code, r.reason)
