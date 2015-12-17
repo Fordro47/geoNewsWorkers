@@ -317,16 +317,16 @@ def updateDB(jsonObject):
 		final = json.dumps(dbJson)
 		log.debug("trying to put: " + final)
 		log.debug("trying to put to http://localhost/geonewsapi/articles/" + str(dbJson['pk']))
-		x = requests.put('http://localhost/geonewsapi/articles/' + str(dbJson['pk'])+'/' , data = final, headers={'content-type':'application/json', 'accept':'application/json'})
-		log.debug("Status Code:" + str(x.status_code) + " Reason: " + x.reason)
-		if (200 <= x.status_code <= 299):
+		r = requests.put('http://localhost/geonewsapi/articles/' + str(dbJson['pk'])+'/' , data = final, headers={'content-type':'application/json', 'accept':'application/json'})
+		log.debug("Status Code:" + str(r.status_code) + " Reason: " + r.reason)
+		if (200 <= r.status_code <= 299):
 			return 1
 		else:
 			log.error("Attempted to submit: " + final)
 			timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-			log.error("Status Code:" + str(x.status_code) + " Reason: " + x.reason + " Relevant html file: " + (str(dbJson['pk']) + "_" + timestamp + ".html"))
+			log.error("Status Code:" + str(r.status_code) + " Reason: " + r.reason + " Relevant html file: " + (str(dbJson['pk']) + "_" + timestamp + ".html"))
 			serverErrorFile = open("logs/html/nyt_" + str(dbJson['pk']) + "_" + timestamp + ".html", "w")
-			serverErrorFile.write(x.content)
+			serverErrorFile.write(r.content)
 			serverErrorFile.close()
 			return 0
 
@@ -335,7 +335,7 @@ def postToDB(jsonArray):
 	for jsonObject in jsonArray:
 		log.debug("trying to post:" + jsonObject)
 		r = requests.post("http://localhost/geonewsapi/articles/", data=jsonObject, headers={'content-type':'application/json', 'accept':'application/json'} )
-		log.debug("Status Code:" + str(x.status_code) + " Reason: " + x.reason)
+		log.debug("Status Code:" + str(r.status_code) + " Reason: " + x.reason)
 		if (200 <= r.status_code <= 299):
 			global submitted
 			submitted += 1
@@ -343,9 +343,9 @@ def postToDB(jsonArray):
 			if not ("sourceid" in r.content):
 				log.error("Attempted to submit: " + jsonObject)
 				timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-				log.error("Status Code:" + str(x.status_code) + " Reason: " + x.reason + " Relevant html file: " + (str(dbJson['pk']) + "_" + timestamp + ".html"))
+				log.error("Status Code:" + str(r.status_code) + " Reason: " + r.reason + " Relevant html file: " + (str(dbJson['pk']) + "_" + timestamp + ".html"))
 				serverErrorFile = open("logs/html/nyt_" + str(dbJson['pk']) + "_" + timestamp + ".html", "w")
-				serverErrorFile.write(x.content)
+				serverErrorFile.write(r.content)
 				serverErrorFile.close()
 			else:
 				global duplicates
