@@ -343,7 +343,7 @@ def postToDB(jsonArray):
 			if not ("sourceid" in r.content):
 				log.error("Attempted to submit: " + jsonObject)
 				timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-                sourceid = json.loads(jsonObject)['sourceid']
+				sourceid = json.loads(jsonObject)['sourceid']
 				log.error("Status Code:" + str(r.status_code) + " Reason: " + r.reason + " Relevant html file: " + sourceid + "_" + timestamp + ".html")
 				serverErrorFile = open("logs/html/nyt_" + sourceid + "_" + timestamp + ".html", "w")
 				serverErrorFile.write(r.content)
