@@ -196,7 +196,7 @@ def parseKeywords(keywords):
 	log.debug("parseKeywords called with:" + pprint.pformat(keywords));
 	i = 0
 	address = None
-    coords = None
+	coords = None
 	while (i < len(keywords)):
 		keywordDict = {}
 		#limit to length 79 to match DB requirements
@@ -209,9 +209,9 @@ def parseKeywords(keywords):
 		if keywordDict not in keywordList:
 			keywordList.append(keywordDict)
 		i+=1
-    if(address != None):
-        log.debug("sending " + address + " to parseLocation")
-        coords = parseLocation(address)
+	if(address != None):
+		log.debug("sending " + address + " to parseLocation")
+		coords = parseLocation(address)
 	log.debug("parsed keywords: " + pprint.pformat(keywordList) + "coordinates: " + pprint.pformat(coords))
 	return [keywordList, coords]
 
