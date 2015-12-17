@@ -87,7 +87,7 @@ def parseArticles(articles):
 
 		news.append(dic)
 
-	log.debug("articles in page: " + len(news))
+	log.debug("articles in page: " + str(len(news)))
 	return(news)
 
 def parseArticleList(articleList):
