@@ -194,7 +194,6 @@ def parseKeywords(keywords):
 	"""
 	keywordList = []
 	log.debug("parseKeywords called with:" + pprint.pformat(keywords));
-
 	i = 0
 	address = None
 	while (i < len(keywords)):
@@ -209,13 +208,9 @@ def parseKeywords(keywords):
 		if keywordDict not in keywordList:
 			keywordList.append(keywordDict)
 		i+=1
-
 	log.debug("sending " + newAddress + " to parseLocation")
-
 	coords = parseLocation(address)
-
 	log.debug("parsed keywords: " + pprint.pformat(keywordList) + "coordinates: " + pprint.pformat(coords))
-
 	return [keywordList, coords]
 
 def parseMultimedia(multimedia):
@@ -260,36 +255,29 @@ def jsonArticle(article):
 	data['authors'] = parseAuthors(article['author'])
 	if (article['lead_paragraph'] != None):
 		data['abstract'] = article['lead_paragraph'][0:499]
-
 	#DB doesn't accept null abstract
 	else:
 		data['abstract'] = ""
-
 	#coordinates are derived from parsed keywords
 	parsedKeywords = parseKeywords(article['keywords'])
-
 	if (len(parsedKeywords[0]) > 0 and parsedKeywords[0][0]['keyword'] != ""):
 		data['keywords'] = parsedKeywords[0]
 	else:
 		data['keywords'] = []
 	data['coords'] = parsedKeywords[1]
 	data['images'] = parseMultimedia(article['multimedia'])
-
 	#no parsing required
 	data['url'] = article['url']
 	data['date'] = article['date']
 	data['sourceid'] = 'NYT_' + article['id']
 	data['sectionname'] = 'miscellaneous' if article['news_desk'] == None else article['news_desk']
     data['category'] = parseCategory(data) if len(data['keywords']) > 0 else 'world'
-
 	#defaults until resolved ########
 	data['retweetcount'] = 0
 	data['retweetcounts'] = []
-
 	data['sharecount'] = 0
 	data['facebookcounts'] = []
 	#######################
-
 	json_object = json.dumps(data)
 	return (json_object)
 
@@ -312,26 +300,20 @@ def updateDB(jsonObject):
 		Takes in a json string and attempts to retrieve corresponding article from database
 		once retrieved, all fields are updated except for twitter and facebook counts'
 		"""
-
 		#old json to fix
 		updatedJson = json.loads(jsonObject)
-
 		log.debug("post failed, trying to update existing")
 		dbJson = requests.get("http://localhost/geonewsapi/articles/?format=json&sourceid=" +  updatedJson['sourceid']).json()[0]
 		log.debug("trying to get from http://localhost/geonewsapi/articles/?format=json&sourceid=" + updatedJson['sourceid'])
-
 		log.debug("This is dbJson\n")
 		log.debug(bJson)
-
 		for key in updatedJson:
 			log.debug("adding " + str(key) + " to dbJson")
 			log.debug("dbJson is a " + str(type(dbJson)))
 			log.debug("updatedJson is a " + str(type(updatedJson)))
 			dbJson[key] = updatedJson[key]
-
 		final = json.dumps(dbJson)
 		log.debug("trying to put: " + final)
-
 		log.debug("trying to put to http://localhost/geonewsapi/articles/" + str(dbJson['pk']))
 		x = requests.put('http://localhost/geonewsapi/articles/' + str(dbJson['pk'])+'/' , data = final, headers={'content-type':'application/json', 'accept':'application/json'})
 		log.debug("Status Code:" + str(x.status_code) + " Reason: " + x.reason)
@@ -351,13 +333,10 @@ def postToDB(jsonArray):
 	for jsonObject in jsonArray:
 		log.debug("trying to post:" + jsonObject)
 		r = requests.post("http://localhost/geonewsapi/articles/", data=jsonObject, headers={'content-type':'application/json', 'accept':'application/json'} )
-
 		log.debug("Status Code:" + str(x.status_code) + " Reason: " + x.reason)
-
 		if (200 <= r.status_code <= 299):
 			global submitted
 			submitted += 1
-
 		if (r.status_code == 400):
 			if not ("sourceid" in r.content):
                 log.error("Attempted to submit: " + jsonObject)
