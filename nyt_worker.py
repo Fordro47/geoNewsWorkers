@@ -30,12 +30,12 @@ fileHandler.setFormatter(formatter)
 log.addHandler(fileHandler)
 
 if (len(sys.argv) == 3 and str(sys.argv[2]).lower() == "-d"):
-    debugging = true
-    streamHandler = logging.StreamHandler()
-    streamHandler.setLevel(logging.DEBUG)
-    streamHandler.setFormatter(formatter)
-    log.addHandler(streamHandler)
-    log.debug("debugging enabled")
+	debugging = true
+	streamHandler = logging.StreamHandler()
+	streamHandler.setLevel(logging.DEBUG)
+	streamHandler.setFormatter(formatter)
+	log.addHandler(streamHandler)
+	log.debug("debugging enabled")
 
 log.info("nyt_worker called with: " + date);
 
@@ -63,32 +63,32 @@ def getArticles(date):
 	return (articleList)
 
 def parseArticles(articles):
-    """
-    This function takes in a response to the NYT api and stores
-    the articles into a list of dictionaries
+	"""
+	This function takes in a response to the NYT api and stores
+	the articles into a list of dictionaries
 
-    modified from: http://dlab.berkeley.edu/blog/scraping-new-york-times-articles-python-tutorial
-    """
-    news = []
-    for i in articles['response']['docs']:
-        dic = {}
-        dic['author'] = i['byline']
-        dic['headline'] = i['headline']
-        dic['lead_paragraph'] = i['lead_paragraph']
-        dic['keywords'] = i['keywords']
-        dic['url'] = i['web_url']
-        dic['date'] = i['pub_date']
-        dic['news_desk'] = i['news_desk']
-        dic['id'] = i['_id']
-        dic['source'] = i['source']
-        dic['multimedia'] = i['multimedia']
+	modified from: http://dlab.berkeley.edu/blog/scraping-new-york-times-articles-python-tutorial
+	"""
+	news = []
+	for i in articles['response']['docs']:
+		dic = {}
+		dic['author'] = i['byline']
+		dic['headline'] = i['headline']
+		dic['lead_paragraph'] = i['lead_paragraph']
+		dic['keywords'] = i['keywords']
+		dic['url'] = i['web_url']
+		dic['date'] = i['pub_date']
+		dic['news_desk'] = i['news_desk']
+		dic['id'] = i['_id']
+		dic['source'] = i['source']
+		dic['multimedia'] = i['multimedia']
 
-        log.debug("adding news from: " + i['web_url'])
+		log.debug("adding news from: " + i['web_url'])
 
-        news.append(dic)
+		news.append(dic)
 
-    log.debug("articles in page: " + len(news))
-    return(news)
+	log.debug("articles in page: " + len(news))
+	return(news)
 
 def parseArticleList(articleList):
 	"""
@@ -271,7 +271,7 @@ def jsonArticle(article):
 	data['date'] = article['date']
 	data['sourceid'] = 'NYT_' + article['id']
 	data['sectionname'] = 'miscellaneous' if article['news_desk'] == None else article['news_desk']
-    data['category'] = parseCategory(data) if len(data['keywords']) > 0 else 'world'
+	data['category'] = (parseCategory(data) if len(data['keywords']) > 0 else 'world')
 	#defaults until resolved ########
 	data['retweetcount'] = 0
 	data['retweetcounts'] = []
@@ -323,8 +323,8 @@ def updateDB(jsonObject):
 			log.error("Attempted to submit: " + final)
 			timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
 			log.error("Status Code:" + str(x.status_code) + " Reason: " + x.reason + " Relevant html file: " + (str(dbJson['pk']) + "_" + timestamp + ".html"))
-            serverErrorFile = open("logs/html/nyt_" + str(dbJson['pk']) + "_" + timestamp + ".html", "w")
-            serverErrorFile.write(x.content)
+			serverErrorFile = open("logs/html/nyt_" + str(dbJson['pk']) + "_" + timestamp + ".html", "w")
+			serverErrorFile.write(x.content)
 			serverErrorFile.close()
 			return 0
 
@@ -339,12 +339,12 @@ def postToDB(jsonArray):
 			submitted += 1
 		if (r.status_code == 400):
 			if not ("sourceid" in r.content):
-                log.error("Attempted to submit: " + jsonObject)
-    			timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-    			log.error("Status Code:" + str(x.status_code) + " Reason: " + x.reason + " Relevant html file: " + (str(dbJson['pk']) + "_" + timestamp + ".html"))
-    			serverErrorFile = open("logs/html/nyt_" + str(dbJson['pk']) + "_" + timestamp + ".html", "w")
-    			serverErrorFile.write(x.content)
-    			serverErrorFile.close()
+				log.error("Attempted to submit: " + jsonObject)
+				timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+				log.error("Status Code:" + str(x.status_code) + " Reason: " + x.reason + " Relevant html file: " + (str(dbJson['pk']) + "_" + timestamp + ".html"))
+				serverErrorFile = open("logs/html/nyt_" + str(dbJson['pk']) + "_" + timestamp + ".html", "w")
+				serverErrorFile.write(x.content)
+				serverErrorFile.close()
 			else:
 				global duplicates
 				duplicates += 1
