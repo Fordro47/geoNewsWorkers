@@ -13,5 +13,5 @@ yesterday = time.strftime('%Y%m%d', yesterday)
 print "yesterday is: ", yesterday
 
 os.system("python nyt_worker.py " + yesterday)
-os.system("python twitter_worker.py")
+#os.system("python twitter_worker.py")
 os.system("python facebook_worker.py")

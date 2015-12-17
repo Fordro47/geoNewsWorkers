@@ -335,7 +335,7 @@ def postToDB(jsonArray):
 	for jsonObject in jsonArray:
 		log.debug("trying to post:" + jsonObject)
 		r = requests.post("http://localhost/geonewsapi/articles/", data=jsonObject, headers={'content-type':'application/json', 'accept':'application/json'} )
-		log.debug("Status Code:" + str(r.status_code) + " Reason: " + x.reason)
+		log.debug("Status Code:" + str(r.status_code) + " Reason: " + r.reason)
 		if (200 <= r.status_code <= 299):
 			global submitted
 			submitted += 1
