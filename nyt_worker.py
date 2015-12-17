@@ -308,7 +308,7 @@ def updateDB(jsonObject):
 		dbJson = requests.get("http://localhost/geonewsapi/articles/?format=json&sourceid=" +  updatedJson['sourceid']).json()[0]
 		log.debug("trying to get from http://localhost/geonewsapi/articles/?format=json&sourceid=" + updatedJson['sourceid'])
 		log.debug("This is dbJson\n")
-		log.debug(bJson)
+		log.debug(dbJson)
 		for key in updatedJson:
 			log.debug("adding " + str(key) + " to dbJson")
 			log.debug("dbJson is a " + str(type(dbJson)))
